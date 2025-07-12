@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- Primary Meta Tags -->
+    <title>Dashboard Peta Anggaran - Kementerian Transmigrasi</title>
+    <meta name="title" content="Dashboard Peta Anggaran - Kementerian Transmigrasi">
+    <meta name="description" content="Visualisasi peta anggaran program prioritas Kementerian Transmigrasi Republik Indonesia">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://your-domain.com/">
+    <meta property="og:title" content="Dashboard Peta Anggaran - Kementerian Transmigrasi">
+    <meta property="og:description" content="Visualisasi peta anggaran program prioritas Kementerian Transmigrasi Republik Indonesia">
+    <meta property="og:image" content="https://your-domain.com/thumbnail.jpg">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://your-domain.com/">
+    <meta property="twitter:title" content="Dashboard Peta Anggaran - Kementerian Transmigrasi">
+    <meta property="twitter:description" content="Visualisasi peta anggaran program prioritas Kementerian Transmigrasi Republik Indonesia">
+    <meta property="twitter:image" content="https://your-domain.com/thumbnail.jpg">
+
+    <link rel="icon" type="image/x-icon" href="img/favicon.ico">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link href='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/leaflet.fullscreen.css' rel='stylesheet' />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header Section -->
+        <div class="header-section">
+            <div class="header-content">
+                <div class="header-left">
+                    <div class="header-logo">
+                        <img src="img/logo.png" alt="Logo Kementerian" height="48">
+                    </div>
+                    <div class="header-text">
+                        <h1>Dashboard Peta Anggaran</h1>
+                        <p>Kementerian Transmigrasi Republik Indonesia</p>
+                    </div>
+                </div>
+                <div class="header-controls">
+                    <div class="search-box">
+                        <span class="material-icons-round search-icon">search</span>
+                        <input type="text" class="search-input" id="searchInput" 
+                               placeholder="Cari provinsi, kabupaten, kegiatan..." onkeyup="applyFilters()">
+                    </div>
+                    <button class="btn btn-primary" onclick="exportData()">
+                        <span class="material-icons-round">download</span>
+                        Export Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Section -->
+        <div class="stats-section">
+            <div class="stat-card alokasi">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <span class="material-icons-round">account_balance</span>
+                    </div>
+                    <div class="stat-trend">+12.5%</div>
+                </div>
+                <div class="stat-value" id="totalAlokasi">Rp 1.4M</div>
+                <div class="stat-label">Total Alokasi Anggaran</div>
+            </div>
+            <div class="stat-card kegiatan">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <span class="material-icons-round">assignment</span>
+                    </div>
+                    <div class="stat-trend">+8.2%</div>
+                </div>
+                <div class="stat-value" id="totalKegiatan">7</div>
+                <div class="stat-label">Total Kegiatan</div>
+            </div>
+            <div class="stat-card provinsi">
+                <div class="stat-header">
+                    <div class="stat-icon">
+                        <span class="material-icons-round">location_on</span>
+                    </div>
+                    <div class="stat-trend">+3</div>
+                </div>
+                <div class="stat-value" id="totalProvinsi">1</div>
+                <div class="stat-label">Provinsi Terlibat</div>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Map Section -->
+            <div class="map-section">
+                <div class="section-title">
+                    <span class="material-icons-round">map</span>
+                    Peta Sebaran Kegiatan
+                </div>
+                <div id="map"></div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="charts-section">
+                <div class="chart-card">
+                    <div class="section-title">
+                        <span class="material-icons-round">pie_chart</span>
+                        Alokasi per Program
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="programChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <div class="section-title">
+                        <span class="material-icons-round">bar_chart</span>
+                        Distribusi per Kabupaten
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="kabupatenChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Import Section -->
+        <div class="data-section">
+            <div class="section-title">
+                <span class="material-icons-round">upload_file</span>
+                Import Data Excel
+            </div>
+            <div class="data-controls">
+                <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                    <span class="material-icons-round">folder</span>
+                    Upload Excel
+                </button>
+                <button class="btn btn-success" onclick="togglePasteArea()">
+                    <span class="material-icons-round">content_paste</span>
+                    Paste Data
+                </button>
+                <button class="btn btn-success" onclick="loadSampleData()">
+                    <span class="material-icons-round">refresh</span>
+                    Sample Data
+                </button>
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display: none;" onchange="handleFileUpload(event)">
+            <textarea id="pasteArea" class="paste-area" placeholder="Paste data Excel di sini (Ctrl+V)..." style="display: none;"></textarea>
+            <div id="pasteButtons" style="display: none; margin-top: 15px;">
+                <button class="btn btn-success" onclick="processPastedData()">
+                    <span class="material-icons-round">check</span>
+                    Proses Data
+                </button>
+                <button class="btn" onclick="clearPasteArea()" style="background: var(--bg-light);">
+                    <span class="material-icons-round">delete</span>
+                    Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Data Table -->
+        <div class="table-wrapper">
+            <div class="section-title">
+                <span class="material-icons-round">table_chart</span>
+                Data Anggaran
+            </div>
+            <div class="filter-controls">
+                <div class="filter-group">
+                    <label for="provinsiFilter">Provinsi:</label>
+                    <select id="provinsiFilter" onchange="updateKabupatenOptions(); applyFilters();">
+                        <option value="">Semua Provinsi</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="kabupatenFilter">Kabupaten:</label>
+                    <select id="kabupatenFilter" onchange="applyFilters();">
+                        <option value="">Semua Kabupaten</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="programFilter">Program Prioritas:</label>
+                    <select id="programFilter" onchange="applyFilters();">
+                        <option value="">Semua Program</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="ukeFilter">UKE II:</label>
+                    <select id="ukeFilter" onchange="applyFilters();">
+                        <option value="">Semua UKE II</option>
+                    </select>
+                </div>
+            </div>
+            <div id="tableContainer" class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NO</th>
+                            <th>SATKER</th>
+                            <th colspan="3">INDIKASI LOKUS KEGIATAN</th>
+                            <th>MENU KEGIATAN</th>
+                            <th>TARGET</th>
+                            <th>ALOKASI</th>
+                            <th>UKE II</th>
+                            <th>Program Prioritas</th>
+                        </tr>
+                        <tr>
+                            <th></th>
+                            <th></th>
+                            <th>PROVINSI</th>
+                            <th>KABUPATEN</th>
+                            <th>DESA/LOKASI/KAWASAN</th>
+                            <th></th>
+                            <th>VOL&nbsp;&nbsp;&nbsp;SATUAN</th>
+                            <th></th>
+                            <th></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="dataTableBody">
+                        <!-- Data will be populated here -->
+                    </tbody>
+                </table>
+                <div class="empty-state">
+                    <span class="material-icons-round empty-icon">insert_chart</span>
+                    <h3>Tidak ada data</h3>
+                    <p>Upload atau paste data Excel untuk memulai</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/xlsx/dist/xlsx.full.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src='https://api.mapbox.com/mapbox.js/plugins/leaflet-fullscreen/v1.0.1/Leaflet.fullscreen.min.js'></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
+    <script src="coordinatesDB.js"></script>
+    <script src="main.js"></script>
+</body>
+</html> 
